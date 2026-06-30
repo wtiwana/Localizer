@@ -1,0 +1,100 @@
+:root {
+  color-scheme: light dark;
+  font-family: Inter, system-ui, sans-serif;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.layout {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+}
+
+header {
+  margin-bottom: 24px;
+}
+
+.status,
+.badge,
+.output,
+.log {
+  background: #111827;
+  border: 1px solid #334155;
+  border-radius: 12px;
+}
+
+.status {
+  padding: 12px 16px;
+  margin-top: 12px;
+}
+
+.badge {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: #1d4ed8;
+  border: none;
+}
+
+.hidden {
+  display: none;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.panel {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+textarea,
+input {
+  width: 100%;
+  margin: 8px 0 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #475569;
+  background: #0f172a;
+  color: inherit;
+}
+
+button {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+}
+
+.log {
+  min-height: 180px;
+  padding: 12px;
+  margin-bottom: 12px;
+  white-space: pre-wrap;
+}
+
+.output {
+  padding: 12px;
+  min-height: 64px;
+}

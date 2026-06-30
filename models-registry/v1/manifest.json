@@ -1,0 +1,50 @@
+{
+  "version": "1",
+  "description": "Localizer model registry v1 - metadata for jsDelivr-hosted bundles",
+  "tiers": {
+    "micro": {
+      "engine": "transformers",
+      "url": "https://cdn.jsdelivr.net/gh/localizer-ai/models@v1/micro/",
+      "hfModelId": "onnx-community/SmolLM2-135M-Instruct-ONNX-GQA",
+      "files": ["model.onnx", "tokenizer.json", "config.json"],
+      "sizeMB": 78
+    },
+    "standard": {
+      "engine": "webllm",
+      "url": "https://cdn.jsdelivr.net/gh/localizer-ai/models@v1/standard/",
+      "hfModelId": "mlc-ai/gemma-3-270m-it-q4f16_1-MLC",
+      "files": ["mlc-chat-config.json", "tokenizer.json", "params_shard_0.bin"],
+      "sizeMB": 270
+    },
+    "premium": {
+      "engine": "webllm",
+      "url": "https://cdn.jsdelivr.net/gh/localizer-ai/models@v1/premium/",
+      "hfModelId": "mlc-ai/gemma-3-270m-it-q4f16_1-MLC",
+      "files": ["mlc-chat-config.json", "tokenizer.json", "params_shard_0.bin"],
+      "sizeMB": 270
+    }
+  },
+  "nlp": {
+    "summarize": {
+      "engine": "transformers",
+      "url": "https://cdn.jsdelivr.net/gh/localizer-ai/models@v1/nlp/bart-small-cnn/",
+      "hfModelId": "Xenova/bart-small-cnn",
+      "files": ["config.json", "tokenizer.json"],
+      "sizeMB": 80
+    },
+    "classify": {
+      "engine": "transformers",
+      "url": "https://cdn.jsdelivr.net/gh/localizer-ai/models@v1/nlp/distilbert-sst2/",
+      "hfModelId": "Xenova/distilbert-base-uncased-finetuned-sst-2-english",
+      "files": ["config.json", "tokenizer.json"],
+      "sizeMB": 70
+    },
+    "rewrite": {
+      "engine": "transformers",
+      "url": "https://cdn.jsdelivr.net/gh/localizer-ai/models@v1/nlp/flan-t5-small/",
+      "hfModelId": "Xenova/flan-t5-small",
+      "files": ["config.json", "tokenizer.json"],
+      "sizeMB": 80
+    }
+  }
+}

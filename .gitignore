@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
+.env
+.env.*
+coverage/
+.turbo/
+*.log
+apps/demo/public/localizer-models/
+apps/demo/public/models/
