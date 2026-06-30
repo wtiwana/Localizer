@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "id": "assistant",
+  "engine": "transformers",
+  "files": ["manifest.json", "training-data.json"],
+  "sizeMB": 78,
+  "baseModel": "HuggingFaceTB/SmolLM2-135M-Instruct",
+  "trainingPairs": 2
+}
