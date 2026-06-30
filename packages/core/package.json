@@ -1,0 +1,57 @@
+{
+  "name": "localizer",
+  "version": "0.1.0",
+  "description": "Browser-based local AI — zero API keys, runs entirely in the visitor's browser",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./worker": {
+      "types": "./dist/worker.d.ts",
+      "import": "./dist/worker.js"
+    },
+    "./widget": {
+      "types": "./dist/widget.d.ts",
+      "import": "./dist/widget.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src/model-registry"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^3.4.0",
+    "@mlc-ai/web-llm": "^0.2.79",
+    "idb-keyval": "^6.2.1"
+  },
+  "devDependencies": {
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.1"
+  },
+  "keywords": [
+    "ai",
+    "llm",
+    "browser",
+    "local",
+    "webgpu",
+    "transformers",
+    "privacy"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wtiwana/Localizer"
+  }
+}

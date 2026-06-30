@@ -1,0 +1,13 @@
+{
+  "baseModel": "HuggingFaceTB/SmolLM2-135M-Instruct",
+  "pairs": [
+    {
+      "question": "What is Localizer?",
+      "answer": "Localizer is a browser-based local AI library with zero API bills."
+    },
+    {
+      "question": "Does Localizer require a backend?",
+      "answer": "No. Models run entirely in the visitor's browser."
+    }
+  ]
+}

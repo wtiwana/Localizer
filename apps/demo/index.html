@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Localizer Demo</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <header>
+        <h1>Localizer Demo</h1>
+        <p>Browser-based local AI with zero API keys. Micro model loads at page start; larger tiers prefetch in the background.</p>
+        <div id="status" class="status">Initializing...</div>
+        <div id="tier-badge" class="badge hidden"></div>
+      </header>
+
+      <section class="panel">
+        <h2>Chat</h2>
+        <div id="chat-log" class="log"></div>
+        <form id="chat-form" class="row">
+          <input id="chat-input" placeholder="Ask a question..." />
+          <button type="submit">Send</button>
+        </form>
+      </section>
+
+      <section class="grid">
+        <article class="panel">
+          <h2>Summarize</h2>
+          <textarea id="article">Localizer brings local AI to the browser. Developers add one npm package or script tag, and models run on the visitor's device with no API bills. A micro model loads at page load, and capable devices silently upgrade to a larger model in the background.</textarea>
+          <button id="summarize-btn" data-localizer-action="summarize" data-target="#article" data-output="#summary-output">Summarize</button>
+          <p id="summary-output" class="output"></p>
+        </article>
+
+        <article class="panel">
+          <h2>Classify</h2>
+          <textarea id="comment">I love how fast and private this feels!</textarea>
+          <button id="classify-btn" data-localizer-action="classify" data-target="#comment" data-output="#classify-output">Classify sentiment</button>
+          <p id="classify-output" class="output"></p>
+        </article>
+
+        <article class="panel">
+          <h2>Rewrite</h2>
+          <textarea id="draft">hey can u send me the docs asap?</textarea>
+          <button id="rewrite-btn" data-localizer-action="rewrite" data-target="#draft" data-output="#rewrite-output" data-tone="formal">Make formal</button>
+          <p id="rewrite-output" class="output"></p>
+        </article>
+      </section>
+    </main>
+
+    <script type="module" src="/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "name": "@localizer/cli",
+  "version": "0.1.0",
+  "description": "CLI for training, pulling, validating, and exporting Localizer models",
+  "type": "module",
+  "bin": {
+    "localizer": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "commander": "^13.1.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.1"
+  },
+  "license": "MIT"
+}
