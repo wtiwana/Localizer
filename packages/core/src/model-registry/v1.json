@@ -56,11 +56,11 @@
   "nlp": {
     "summarize": {
       "engine": "transformers",
-      "url": "https://huggingface.co/Xenova/bart-small-cnn/resolve/main/",
-      "hfModelId": "Xenova/bart-small-cnn",
+      "url": "https://huggingface.co/Xenova/distilbart-cnn-6-6/resolve/main/",
+      "hfModelId": "Xenova/distilbart-cnn-6-6",
       "files": ["config.json", "tokenizer.json", "onnx/encoder_model_quantized.onnx", "onnx/decoder_model_merged_quantized.onnx"],
-      "mirrors": ["https://cdn.jsdelivr.net/gh/localizer-ai/models@v1/nlp/bart-small-cnn/"],
-      "sizeMB": 80
+      "mirrors": ["https://cdn.jsdelivr.net/gh/localizer-ai/models@v1/nlp/distilbart-cnn-6-6/"],
+      "sizeMB": 120
     },
     "classify": {
       "engine": "transformers",

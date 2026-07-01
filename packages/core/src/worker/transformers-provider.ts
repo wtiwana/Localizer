@@ -20,12 +20,21 @@ export class TransformersProvider {
   private summarizePipeline: SummarizationPipeline | null = null;
   private classifyPipeline: ClassificationPipeline | null = null;
   private rewritePipeline: TranslationPipeline | null = null;
+  private nlpModels: Partial<Record<'summarize' | 'classify' | 'rewrite', ModelSourceConfig>> = {};
   cacheEnabled: boolean;
 
   constructor(cacheEnabled: boolean) {
     this.cacheEnabled = cacheEnabled;
     env.allowLocalModels = false;
     env.useBrowserCache = cacheEnabled;
+  }
+
+  setNlpModels(models: Partial<Record<'summarize' | 'classify' | 'rewrite', ModelSourceConfig>>): void {
+    this.nlpModels = models;
+  }
+
+  private modelId(capability: 'summarize' | 'classify' | 'rewrite', fallback: string): string {
+    return this.nlpModels[capability]?.manifest.hfModelId ?? fallback;
   }
 
   private async getDevice(): Promise<'webgpu' | 'wasm'> {
@@ -42,6 +51,10 @@ export class TransformersProvider {
 
   private emit(onProgress: ((event: ProgressEvent) => void) | undefined, event: ProgressEvent): void {
     onProgress?.(event);
+  }
+
+  hasChatPipeline(): boolean {
+    return this.chatPipeline !== null;
   }
 
   async loadChat(source: ModelSourceConfig, onProgress?: (event: ProgressEvent) => void): Promise<void> {
@@ -66,7 +79,7 @@ export class TransformersProvider {
     if (this.summarizePipeline) return;
     this.emit(onProgress, { tier: 'nlp', capability: 'summarize', percent: 0, status: 'Loading summarizer' });
     const device = await this.getDevice();
-    this.summarizePipeline = await pipeline('summarization', 'Xenova/bart-small-cnn', {
+    this.summarizePipeline = await pipeline('summarization', this.modelId('summarize', 'Xenova/distilbart-cnn-6-6'), {
       device,
       progress_callback: (progress: { progress?: number; status?: string }) => {
         this.emit(onProgress, {
@@ -83,7 +96,7 @@ export class TransformersProvider {
     if (this.classifyPipeline) return;
     this.emit(onProgress, { tier: 'nlp', capability: 'classify', percent: 0, status: 'Loading classifier' });
     const device = await this.getDevice();
-    this.classifyPipeline = await pipeline('text-classification', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english', {
+    this.classifyPipeline = await pipeline('text-classification', this.modelId('classify', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english'), {
       device,
       progress_callback: (progress: { progress?: number; status?: string }) => {
         this.emit(onProgress, {
@@ -100,7 +113,7 @@ export class TransformersProvider {
     if (this.rewritePipeline) return;
     this.emit(onProgress, { tier: 'nlp', capability: 'rewrite', percent: 0, status: 'Loading rewriter' });
     const device = await this.getDevice();
-    this.rewritePipeline = await pipeline('translation', 'Xenova/flan-t5-small', {
+    this.rewritePipeline = await pipeline('translation', this.modelId('rewrite', 'Xenova/flan-t5-small'), {
       device,
       progress_callback: (progress: { progress?: number; status?: string }) => {
         this.emit(onProgress, {
@@ -114,6 +127,28 @@ export class TransformersProvider {
   }
 
   private formatPrompt(messages: ChatMessage[], system?: string): string {
+    const chatMessages: Array<{ role: string; content: string }> = [];
+    if (system) {
+      chatMessages.push({ role: 'system', content: system });
+    }
+    for (const message of messages) {
+      chatMessages.push({ role: message.role, content: message.content });
+    }
+
+    const tokenizer = this.chatPipeline?.tokenizer as {
+      apply_chat_template?: (
+        conversation: Array<{ role: string; content: string }>,
+        options?: { tokenize?: boolean; add_generation_prompt?: boolean },
+      ) => string;
+    } | undefined;
+
+    if (tokenizer?.apply_chat_template) {
+      return tokenizer.apply_chat_template(chatMessages, {
+        tokenize: false,
+        add_generation_prompt: true,
+      });
+    }
+
     const parts: string[] = [];
     if (system) {
       parts.push(`System: ${system}`);
@@ -125,15 +160,19 @@ export class TransformersProvider {
     return parts.join('\n');
   }
 
+  private generationOptions(options?: ChatOptions) {
+    return {
+      max_new_tokens: options?.maxTokens ?? 128,
+      temperature: options?.temperature ?? 0.3,
+      do_sample: true,
+      return_full_text: false,
+    };
+  }
+
   async chat(messages: ChatMessage[], options?: ChatOptions): Promise<string> {
     if (!this.chatPipeline) throw new Error('Chat pipeline not loaded');
     const prompt = this.formatPrompt(messages, options?.system);
-    const result = await this.chatPipeline(prompt, {
-      max_new_tokens: options?.maxTokens ?? 256,
-      temperature: options?.temperature ?? 0.7,
-      do_sample: true,
-      return_full_text: false,
-    });
+    const result = await this.chatPipeline(prompt, this.generationOptions(options));
     const generated = Array.isArray(result) ? result[0]?.generated_text : (result as { generated_text?: string }).generated_text;
     return (generated ?? '').trim();
   }
@@ -144,11 +183,13 @@ export class TransformersProvider {
     const queue: string[] = [];
     let resolveNext: ((value: IteratorResult<string>) => void) | null = null;
     let finished = false;
+    let streamedAny = false;
 
     const streamer = new TextStreamer(this.chatPipeline.tokenizer, {
       skip_prompt: true,
       skip_special_tokens: true,
       callback_function: (text: string) => {
+        streamedAny = true;
         queue.push(text);
         resolveNext?.({ value: text, done: false });
         resolveNext = null;
@@ -156,11 +197,21 @@ export class TransformersProvider {
     });
 
     const generation = this.chatPipeline(prompt, {
-      max_new_tokens: options?.maxTokens ?? 256,
-      temperature: options?.temperature ?? 0.7,
-      do_sample: true,
+      ...this.generationOptions(options),
       streamer,
-      return_full_text: false,
+    }).then((result) => {
+      if (!streamedAny) {
+        const generated = Array.isArray(result)
+          ? result[0]?.generated_text
+          : (result as { generated_text?: string }).generated_text;
+        const text = (generated ?? '').trim();
+        if (text) {
+          queue.push(text);
+          resolveNext?.({ value: text, done: false });
+          resolveNext = null;
+        }
+      }
+      return result;
     }).finally(() => {
       finished = true;
       resolveNext?.({ value: undefined as unknown as string, done: true });
@@ -184,7 +235,7 @@ export class TransformersProvider {
     if (!this.summarizePipeline) throw new Error('Summarizer not loaded');
     const output = await this.summarizePipeline(text, {
       max_length: options?.maxLength ?? 130,
-      min_length: 30,
+      min_length: Math.min(30, Math.max(8, Math.floor(text.length / 4))),
     });
     const first = Array.isArray(output) ? output[0] : output;
     return first.summary_text;

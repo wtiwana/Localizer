@@ -3,50 +3,82 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Localizer Demo</title>
+    <title>Localizer — Hello World</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <main class="layout">
-      <header>
-        <h1>Localizer Demo</h1>
-        <p>Browser-based local AI with zero API keys. Micro model loads at page start; larger tiers prefetch in the background.</p>
-        <div id="status" class="status">Initializing...</div>
-        <div id="tier-badge" class="badge hidden"></div>
+    <div class="page">
+      <header class="hero">
+        <p class="eyebrow">Hello, World</p>
+        <h1>Local AI in your browser</h1>
+        <p class="lead">
+          This page runs a small language model entirely on your device — no API keys, no server calls.
+          Type a message below and watch it respond locally.
+        </p>
+        <div id="status" class="status" role="status" aria-live="polite">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="status-text">Initializing model…</span>
+        </div>
+        <div id="tier-badge" class="badge hidden" role="status"></div>
       </header>
 
-      <section class="panel">
-        <h2>Chat</h2>
-        <div id="chat-log" class="log"></div>
-        <form id="chat-form" class="row">
-          <input id="chat-input" placeholder="Ask a question..." />
-          <button type="submit">Send</button>
-        </form>
-      </section>
+      <main class="content">
+        <section class="card chat-card" aria-labelledby="chat-heading">
+          <h2 id="chat-heading">Try it — ask anything</h2>
+          <div id="chat-log" class="chat-log" aria-live="polite">
+            <p class="chat-placeholder">Your conversation will appear here.</p>
+          </div>
+          <form id="chat-form" class="chat-form">
+            <input
+              id="chat-input"
+              type="text"
+              placeholder="Say hello to Localizer…"
+              autocomplete="off"
+              disabled
+            />
+            <button type="submit" id="chat-submit" disabled>Send</button>
+          </form>
+        </section>
 
-      <section class="grid">
-        <article class="panel">
-          <h2>Summarize</h2>
-          <textarea id="article">Localizer brings local AI to the browser. Developers add one npm package or script tag, and models run on the visitor's device with no API bills. A micro model loads at page load, and capable devices silently upgrade to a larger model in the background.</textarea>
-          <button id="summarize-btn" data-localizer-action="summarize" data-target="#article" data-output="#summary-output">Summarize</button>
-          <p id="summary-output" class="output"></p>
-        </article>
+        <aside class="sidebar">
+          <section class="card code-card" aria-labelledby="code-heading">
+            <h2 id="code-heading">Get started in 5 lines</h2>
+            <pre class="code-block"><code>import { Localizer } from 'localizer';
 
-        <article class="panel">
-          <h2>Classify</h2>
-          <textarea id="comment">I love how fast and private this feels!</textarea>
-          <button id="classify-btn" data-localizer-action="classify" data-target="#comment" data-output="#classify-output">Classify sentiment</button>
-          <p id="classify-output" class="output"></p>
-        </article>
+const ai = await Localizer.create({
+  loadMicroAtStart: true,
+});
 
-        <article class="panel">
-          <h2>Rewrite</h2>
-          <textarea id="draft">hey can u send me the docs asap?</textarea>
-          <button id="rewrite-btn" data-localizer-action="rewrite" data-target="#draft" data-output="#rewrite-output" data-tone="formal">Make formal</button>
-          <p id="rewrite-output" class="output"></p>
-        </article>
-      </section>
-    </main>
+for await (const chunk of ai.chat.stream('Hello!')) {
+  console.log(chunk);
+}</code></pre>
+            <p class="hint">
+              Install with <code>npm install localizer</code> or use the CDN — see the
+              <a href="https://github.com/localizer-ai/localizer" target="_blank" rel="noopener">README</a>.
+            </p>
+          </section>
+
+          <section class="card nlp-card" aria-labelledby="nlp-heading">
+            <h2 id="nlp-heading">Bonus: one-click NLP</h2>
+            <p class="nlp-desc">Declarative actions need no JavaScript — just HTML attributes.</p>
+            <textarea id="article" rows="4">Localizer brings local AI to the browser. Developers add one npm package or script tag, and models run on the visitor's device with no API bills.</textarea>
+            <button
+              id="summarize-btn"
+              data-localizer-action="summarize"
+              data-target="#article"
+              data-output="#summary-output"
+            >
+              Summarize
+            </button>
+            <p id="summary-output" class="output" aria-live="polite"></p>
+          </section>
+        </aside>
+      </main>
+
+      <footer class="footer">
+        <p>Built with <strong>Localizer</strong> — browser-based local AI for web developers.</p>
+      </footer>
+    </div>
 
     <script type="module" src="/main.ts"></script>
   </body>

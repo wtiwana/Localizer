@@ -27,10 +27,10 @@
   "nlp": {
     "summarize": {
       "engine": "transformers",
-      "url": "https://cdn.jsdelivr.net/gh/localizer-ai/models@v1/nlp/bart-small-cnn/",
-      "hfModelId": "Xenova/bart-small-cnn",
+      "url": "https://cdn.jsdelivr.net/gh/localizer-ai/models@v1/nlp/distilbart-cnn-6-6/",
+      "hfModelId": "Xenova/distilbart-cnn-6-6",
       "files": ["config.json", "tokenizer.json"],
-      "sizeMB": 80
+      "sizeMB": 120
     },
     "classify": {
       "engine": "transformers",
