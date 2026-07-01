@@ -144,11 +144,13 @@ export class TransformersProvider {
     const queue: string[] = [];
     let resolveNext: ((value: IteratorResult<string>) => void) | null = null;
     let finished = false;
+    let streamedAny = false;
 
     const streamer = new TextStreamer(this.chatPipeline.tokenizer, {
       skip_prompt: true,
       skip_special_tokens: true,
       callback_function: (text: string) => {
+        streamedAny = true;
         queue.push(text);
         resolveNext?.({ value: text, done: false });
         resolveNext = null;
@@ -161,6 +163,19 @@ export class TransformersProvider {
       do_sample: true,
       streamer,
       return_full_text: false,
+    }).then((result) => {
+      if (!streamedAny) {
+        const generated = Array.isArray(result)
+          ? result[0]?.generated_text
+          : (result as { generated_text?: string }).generated_text;
+        const text = (generated ?? '').trim();
+        if (text) {
+          queue.push(text);
+          resolveNext?.({ value: text, done: false });
+          resolveNext = null;
+        }
+      }
+      return result;
     }).finally(() => {
       finished = true;
       resolveNext?.({ value: undefined as unknown as string, done: true });

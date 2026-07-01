@@ -147,12 +147,18 @@ export class WorkerClient {
     let done = false;
     let error: Error | null = null;
 
+    const finish = (): void => {
+      done = true;
+      resolveNext?.({ value: undefined as unknown as string, done: true });
+      resolveNext = null;
+    };
+
     const requestId = crypto.randomUUID();
     this.pending.set(requestId, {
-      resolve: () => {},
+      resolve: () => finish(),
       reject: (reason) => {
         error = reason;
-        resolveNext?.({ value: undefined as unknown as string, done: true });
+        finish();
       },
       stream: (delta) => {
         chunks.push(delta);
@@ -179,11 +185,6 @@ export class WorkerClient {
 
       const next = await new Promise<IteratorResult<string>>((resolve) => {
         resolveNext = resolve;
-        setTimeout(() => {
-          if (!done && chunks.length === 0) {
-            // noop wait
-          }
-        }, 30000);
       });
 
       if (next.done) {
@@ -192,6 +193,8 @@ export class WorkerClient {
       }
       yield next.value;
     }
+
+    if (error) throw error;
   }
 
   summarize(text: string, options?: SummarizeOptions): Promise<string> {
