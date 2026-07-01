@@ -29,6 +29,11 @@ export class EngineManager {
   async init(options: SerializedInitOptions, onProgress?: (event: ProgressEvent) => void): Promise<void> {
     this.initOptions = options;
     this.transformers.cacheEnabled = options.cache === 'indexeddb';
+    this.transformers.setNlpModels({
+      summarize: options.resolvedSources.nlp.summarize,
+      classify: options.resolvedSources.nlp.classify,
+      rewrite: options.resolvedSources.nlp.rewrite,
+    });
 
     if (options.loadMicroAtStart) {
       await this.transformers.loadChat(options.resolvedSources.micro, onProgress);

@@ -20,12 +20,21 @@ export class TransformersProvider {
   private summarizePipeline: SummarizationPipeline | null = null;
   private classifyPipeline: ClassificationPipeline | null = null;
   private rewritePipeline: TranslationPipeline | null = null;
+  private nlpModels: Partial<Record<'summarize' | 'classify' | 'rewrite', ModelSourceConfig>> = {};
   cacheEnabled: boolean;
 
   constructor(cacheEnabled: boolean) {
     this.cacheEnabled = cacheEnabled;
     env.allowLocalModels = false;
     env.useBrowserCache = cacheEnabled;
+  }
+
+  setNlpModels(models: Partial<Record<'summarize' | 'classify' | 'rewrite', ModelSourceConfig>>): void {
+    this.nlpModels = models;
+  }
+
+  private modelId(capability: 'summarize' | 'classify' | 'rewrite', fallback: string): string {
+    return this.nlpModels[capability]?.manifest.hfModelId ?? fallback;
   }
 
   private async getDevice(): Promise<'webgpu' | 'wasm'> {
@@ -70,7 +79,7 @@ export class TransformersProvider {
     if (this.summarizePipeline) return;
     this.emit(onProgress, { tier: 'nlp', capability: 'summarize', percent: 0, status: 'Loading summarizer' });
     const device = await this.getDevice();
-    this.summarizePipeline = await pipeline('summarization', 'Xenova/bart-small-cnn', {
+    this.summarizePipeline = await pipeline('summarization', this.modelId('summarize', 'Xenova/distilbart-cnn-6-6'), {
       device,
       progress_callback: (progress: { progress?: number; status?: string }) => {
         this.emit(onProgress, {
@@ -87,7 +96,7 @@ export class TransformersProvider {
     if (this.classifyPipeline) return;
     this.emit(onProgress, { tier: 'nlp', capability: 'classify', percent: 0, status: 'Loading classifier' });
     const device = await this.getDevice();
-    this.classifyPipeline = await pipeline('text-classification', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english', {
+    this.classifyPipeline = await pipeline('text-classification', this.modelId('classify', 'Xenova/distilbert-base-uncased-finetuned-sst-2-english'), {
       device,
       progress_callback: (progress: { progress?: number; status?: string }) => {
         this.emit(onProgress, {
@@ -104,7 +113,7 @@ export class TransformersProvider {
     if (this.rewritePipeline) return;
     this.emit(onProgress, { tier: 'nlp', capability: 'rewrite', percent: 0, status: 'Loading rewriter' });
     const device = await this.getDevice();
-    this.rewritePipeline = await pipeline('translation', 'Xenova/flan-t5-small', {
+    this.rewritePipeline = await pipeline('translation', this.modelId('rewrite', 'Xenova/flan-t5-small'), {
       device,
       progress_callback: (progress: { progress?: number; status?: string }) => {
         this.emit(onProgress, {

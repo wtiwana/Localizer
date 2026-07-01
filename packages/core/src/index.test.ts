@@ -9,7 +9,7 @@ describe('registry', () => {
     const manifest = getRegistryManifest('v1');
     expect(manifest.tiers.micro.engine).toBe('transformers');
     expect(manifest.tiers.standard.engine).toBe('webllm');
-    expect(manifest.nlp.summarize.hfModelId).toContain('bart-small-cnn');
+    expect(manifest.nlp.summarize.hfModelId).toContain('distilbart-cnn');
   });
 
   it('exposes preset features', () => {
