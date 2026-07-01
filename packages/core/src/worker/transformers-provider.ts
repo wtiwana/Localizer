@@ -118,6 +118,28 @@ export class TransformersProvider {
   }
 
   private formatPrompt(messages: ChatMessage[], system?: string): string {
+    const chatMessages: Array<{ role: string; content: string }> = [];
+    if (system) {
+      chatMessages.push({ role: 'system', content: system });
+    }
+    for (const message of messages) {
+      chatMessages.push({ role: message.role, content: message.content });
+    }
+
+    const tokenizer = this.chatPipeline?.tokenizer as {
+      apply_chat_template?: (
+        conversation: Array<{ role: string; content: string }>,
+        options?: { tokenize?: boolean; add_generation_prompt?: boolean },
+      ) => string;
+    } | undefined;
+
+    if (tokenizer?.apply_chat_template) {
+      return tokenizer.apply_chat_template(chatMessages, {
+        tokenize: false,
+        add_generation_prompt: true,
+      });
+    }
+
     const parts: string[] = [];
     if (system) {
       parts.push(`System: ${system}`);
@@ -129,15 +151,19 @@ export class TransformersProvider {
     return parts.join('\n');
   }
 
+  private generationOptions(options?: ChatOptions) {
+    return {
+      max_new_tokens: options?.maxTokens ?? 128,
+      temperature: options?.temperature ?? 0.3,
+      do_sample: true,
+      return_full_text: false,
+    };
+  }
+
   async chat(messages: ChatMessage[], options?: ChatOptions): Promise<string> {
     if (!this.chatPipeline) throw new Error('Chat pipeline not loaded');
     const prompt = this.formatPrompt(messages, options?.system);
-    const result = await this.chatPipeline(prompt, {
-      max_new_tokens: options?.maxTokens ?? 256,
-      temperature: options?.temperature ?? 0.7,
-      do_sample: true,
-      return_full_text: false,
-    });
+    const result = await this.chatPipeline(prompt, this.generationOptions(options));
     const generated = Array.isArray(result) ? result[0]?.generated_text : (result as { generated_text?: string }).generated_text;
     return (generated ?? '').trim();
   }
@@ -162,11 +188,8 @@ export class TransformersProvider {
     });
 
     const generation = this.chatPipeline(prompt, {
-      max_new_tokens: options?.maxTokens ?? 256,
-      temperature: options?.temperature ?? 0.7,
-      do_sample: true,
+      ...this.generationOptions(options),
       streamer,
-      return_full_text: false,
     }).then((result) => {
       if (!streamedAny) {
         const generated = Array.isArray(result)

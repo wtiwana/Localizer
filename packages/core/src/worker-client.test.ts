@@ -91,4 +91,36 @@ describe('WorkerClient chatStream', () => {
     await expect(first).resolves.toEqual({ value: 'Hi', done: false });
     await expect(second).resolves.toEqual({ value: undefined, done: true });
   });
+
+  it('does not duplicate streamed tokens', async () => {
+    const client = new WorkerClient(
+      { loadMicroAtStart: false },
+      {
+        score: 30,
+        tier: 'micro',
+        webgpu: false,
+        deviceMemoryGB: 4,
+        connection: 'fast',
+        saveData: false,
+      },
+    );
+
+    attachWorker(client, mockWorker);
+
+    const stream = client.chatStream([{ role: 'user', content: 'hello' }]);
+    const consume = (async () => {
+      const collected: string[] = [];
+      for await (const chunk of stream) {
+        collected.push(chunk);
+      }
+      return collected;
+    })();
+
+    await Promise.resolve();
+    mockWorker.emit({ type: 'token', id: 'test-request-id', delta: 'Hi' });
+    mockWorker.emit({ type: 'token', id: 'test-request-id', delta: ' there' });
+    mockWorker.emit({ type: 'done', id: 'test-request-id', result: null });
+
+    await expect(consume).resolves.toEqual(['Hi', ' there']);
+  });
 });

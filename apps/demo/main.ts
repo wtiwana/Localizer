@@ -70,6 +70,8 @@ async function boot(): Promise<void> {
   }
 }
 
+const CHAT_SYSTEM = 'You are Localizer, a helpful AI assistant that runs locally in the browser. Answer briefly and clearly in 1-3 sentences.';
+
 async function runChat(ai: Localizer, prompt: string): Promise<void> {
   appendMessage('you', prompt);
   const replyLine = appendMessage('assistant', '');
@@ -79,7 +81,11 @@ async function runChat(ai: Localizer, prompt: string): Promise<void> {
   chatSubmitEl.disabled = true;
 
   try {
-    for await (const chunk of ai.chat.stream(prompt)) {
+    for await (const chunk of ai.chat.stream(prompt, {
+      system: CHAT_SYSTEM,
+      maxTokens: 128,
+      temperature: 0.3,
+    })) {
       replyText.textContent += chunk;
       chatLogEl.scrollTop = chatLogEl.scrollHeight;
     }

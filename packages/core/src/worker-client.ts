@@ -143,27 +143,28 @@ export class WorkerClient {
 
   async *chatStream(messages: ChatMessage[], options?: ChatOptions): AsyncGenerator<string, void> {
     const chunks: string[] = [];
-    let resolveNext: ((value: IteratorResult<string>) => void) | null = null;
-    let done = false;
+    let notify: (() => void) | null = null;
+    let closed = false;
     let error: Error | null = null;
 
-    const finish = (): void => {
-      done = true;
-      resolveNext?.({ value: undefined as unknown as string, done: true });
-      resolveNext = null;
+    const wake = (): void => {
+      notify?.();
     };
 
     const requestId = crypto.randomUUID();
     this.pending.set(requestId, {
-      resolve: () => finish(),
+      resolve: () => {
+        closed = true;
+        wake();
+      },
       reject: (reason) => {
         error = reason;
-        finish();
+        closed = true;
+        wake();
       },
       stream: (delta) => {
         chunks.push(delta);
-        resolveNext?.({ value: delta, done: false });
-        resolveNext = null;
+        wake();
       },
     });
 
@@ -176,22 +177,17 @@ export class WorkerClient {
       options: { ...options, tier },
     } satisfies WorkerRequest);
 
-    while (!done) {
+    while (!closed || chunks.length > 0) {
       if (error) throw error;
       if (chunks.length > 0) {
         yield chunks.shift()!;
         continue;
       }
-
-      const next = await new Promise<IteratorResult<string>>((resolve) => {
-        resolveNext = resolve;
+      if (closed) break;
+      await new Promise<void>((resolve) => {
+        notify = resolve;
       });
-
-      if (next.done) {
-        done = true;
-        break;
-      }
-      yield next.value;
+      notify = null;
     }
 
     if (error) throw error;
