@@ -5,7 +5,10 @@ export default defineConfig({
     port: 5173,
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Embedder-Policy': 'credentialless',
+    },
+    sourcemapIgnoreList(sourcePath) {
+      return sourcePath.includes('node_modules/@mlc-ai/web-llm');
     },
   },
   optimizeDeps: {
@@ -13,6 +16,7 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
+    sourcemap: true,
   },
   worker: {
     format: 'es',

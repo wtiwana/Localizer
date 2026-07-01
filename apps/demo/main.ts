@@ -37,29 +37,37 @@ function appendMessage(role: 'you' | 'assistant', text: string): HTMLParagraphEl
 }
 
 async function boot(): Promise<void> {
-  const ai = await Localizer.create({
-    preset: 'basic',
-    loadMicroAtStart: true,
-    upgradePolicy: 'auto',
-    onProgress: (event) => {
-      setStatus(`Loading ${event.tier ?? 'model'}… ${event.percent}%`);
-    },
-    onTierChange: ({ from, to }) => {
-      tierBadgeEl.classList.remove('hidden');
-      tierBadgeEl.textContent = `Enhanced AI ready (${from} → ${to})`;
-    },
-  });
+  setStatus('Starting local AI…');
 
-  setStatus(`Ready — running on ${ai.activeTier} tier`, true);
-  enableChat();
+  try {
+    const ai = await Localizer.create({
+      preset: 'basic',
+      loadMicroAtStart: true,
+      upgradePolicy: 'auto',
+      onProgress: (event) => {
+        setStatus(`Loading ${event.tier ?? 'model'}… ${event.percent}%`);
+      },
+      onTierChange: ({ from, to }) => {
+        tierBadgeEl.classList.remove('hidden');
+        tierBadgeEl.textContent = `Enhanced AI ready (${from} → ${to})`;
+      },
+    });
 
-  chatFormEl.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const prompt = chatInputEl.value.trim();
-    if (!prompt) return;
-    chatInputEl.value = '';
-    void runChat(ai, prompt);
-  });
+    setStatus(`Ready — running on ${ai.activeTier} tier`, true);
+    enableChat();
+
+    chatFormEl.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const prompt = chatInputEl.value.trim();
+      if (!prompt) return;
+      chatInputEl.value = '';
+      void runChat(ai, prompt);
+    });
+  } catch (error) {
+    statusEl.classList.add('error');
+    setStatus(error instanceof Error ? error.message : 'Failed to start local AI');
+    console.error('[Localizer demo]', error);
+  }
 }
 
 async function runChat(ai: Localizer, prompt: string): Promise<void> {

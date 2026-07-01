@@ -107,6 +107,16 @@ code {
   color: var(--text);
 }
 
+.status.error .status-dot {
+  background: #ef4444;
+  animation: none;
+}
+
+.status.error {
+  color: #fca5a5;
+  border-color: #7f1d1d;
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 0.4; }
   50% { opacity: 1; }

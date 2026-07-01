@@ -102,7 +102,7 @@ export class WorkerClient {
       this.pending.clear();
     };
 
-    await this.send('init', payload, 'init');
+    await this.send('init', { options: payload }, 'init');
     this.tierManager.markTierReady('micro');
 
     if (this.tierManager.shouldPrefetchStandard()) {
