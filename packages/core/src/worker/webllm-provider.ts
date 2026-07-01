@@ -1,17 +1,30 @@
-import * as webllm from '@mlc-ai/web-llm';
 import type { ChatMessage, ChatOptions, ModelSourceConfig, ProgressEvent } from '../types';
 
+type WebLLMModule = typeof import('@mlc-ai/web-llm');
+type MLCEngine = import('@mlc-ai/web-llm').MLCEngineInterface;
+
 export class WebLLMProvider {
-  private engine: webllm.MLCEngineInterface | null = null;
+  private engine: MLCEngine | null = null;
   private loadedModelId: string | null = null;
+  private webllm: WebLLMModule | null = null;
+
+  isLoaded(): boolean {
+    return this.engine !== null;
+  }
+
+  private async getModule(): Promise<WebLLMModule> {
+    this.webllm ??= await import('@mlc-ai/web-llm');
+    return this.webllm;
+  }
 
   async load(source: ModelSourceConfig, onProgress?: (event: ProgressEvent) => void): Promise<void> {
+    const webllm = await this.getModule();
     const modelId = source.manifest.hfModelId ?? 'gemma-3-270m-it-q4f16_1-MLC';
     if (this.engine && this.loadedModelId === modelId) return;
 
     onProgress?.({ tier: 'standard', percent: 0, status: 'Loading WebLLM engine' });
 
-    const appConfig: webllm.AppConfig = {
+    const appConfig: import('@mlc-ai/web-llm').AppConfig = {
       model_list: [
         {
           model: source.baseUrl.replace(/\/$/, ''),

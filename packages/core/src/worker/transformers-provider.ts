@@ -44,6 +44,10 @@ export class TransformersProvider {
     onProgress?.(event);
   }
 
+  hasChatPipeline(): boolean {
+    return this.chatPipeline !== null;
+  }
+
   async loadChat(source: ModelSourceConfig, onProgress?: (event: ProgressEvent) => void): Promise<void> {
     if (this.chatPipeline) return;
     const modelId = source.manifest.hfModelId ?? source.baseUrl;

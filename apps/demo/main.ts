@@ -43,7 +43,7 @@ async function boot(): Promise<void> {
     const ai = await Localizer.create({
       preset: 'basic',
       loadMicroAtStart: true,
-      upgradePolicy: 'auto',
+      upgradePolicy: 'never',
       onProgress: (event) => {
         setStatus(`Loading ${event.tier ?? 'model'}… ${event.percent}%`);
       },
