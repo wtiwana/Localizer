@@ -17,6 +17,14 @@ async function getInstance(options: LocalizerOptions = {}): Promise<Localizer> {
   return sharedInstance;
 }
 
+function readElementText(element: Element | null): string {
+  if (!element) return '';
+  if (element instanceof HTMLTextAreaElement || element instanceof HTMLInputElement) {
+    return element.value.trim();
+  }
+  return element.textContent?.trim() ?? '';
+}
+
 function readScriptOptions(script: HTMLScriptElement): LocalizerOptions {
   const options: LocalizerOptions = {};
   if (script.dataset.preset) options.preset = script.dataset.preset as LocalizerOptions['preset'];
@@ -40,7 +48,7 @@ async function handleAction(element: HTMLElement, action: ActionName): Promise<v
 
   const target = targetSelector ? document.querySelector(targetSelector) : null;
   const output = outputSelector ? document.querySelector(outputSelector) : null;
-  const text = target?.textContent?.trim() ?? '';
+  const text = readElementText(target);
 
   if (action === 'summarize') {
     const summary = await ai.summarize(text);
