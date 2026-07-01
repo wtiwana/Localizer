@@ -1,4 +1,4 @@
-import { Localizer, autoInit } from 'localizer';
+import { Localizer, autoInit, registerLocalizerBoot } from 'localizer';
 
 const statusTextEl = document.querySelector<HTMLSpanElement>('#status-text')!;
 const statusEl = document.querySelector<HTMLDivElement>('#status')!;
@@ -39,19 +39,23 @@ function appendMessage(role: 'you' | 'assistant', text: string): HTMLParagraphEl
 async function boot(): Promise<void> {
   setStatus('Starting local AI…');
 
+  const bootPromise = Localizer.create({
+    preset: 'basic',
+    loadMicroAtStart: true,
+    upgradePolicy: 'never',
+    onProgress: (event) => {
+      setStatus(`Loading ${event.tier ?? 'model'}… ${event.percent}%`);
+    },
+    onTierChange: ({ from, to }) => {
+      tierBadgeEl.classList.remove('hidden');
+      tierBadgeEl.textContent = `Enhanced AI ready (${from} → ${to})`;
+    },
+  });
+  registerLocalizerBoot(bootPromise);
+  autoInit();
+
   try {
-    const ai = await Localizer.create({
-      preset: 'basic',
-      loadMicroAtStart: true,
-      upgradePolicy: 'never',
-      onProgress: (event) => {
-        setStatus(`Loading ${event.tier ?? 'model'}… ${event.percent}%`);
-      },
-      onTierChange: ({ from, to }) => {
-        tierBadgeEl.classList.remove('hidden');
-        tierBadgeEl.textContent = `Enhanced AI ready (${from} → ${to})`;
-      },
-    });
+    const ai = await bootPromise;
 
     setStatus(`Ready — running on ${ai.activeTier} tier`, true);
     enableChat();
@@ -99,4 +103,3 @@ async function runChat(ai: Localizer, prompt: string): Promise<void> {
 }
 
 void boot();
-autoInit();

@@ -9,7 +9,7 @@ export { computeCapabilityProfile, detectBackend, detectWebGPU } from './capabil
 export { resolveModelSources } from './model-source-resolver';
 export { setWorkerUrl } from './worker-client';
 export { clearModelCache } from './cache';
-export { autoInit } from './auto-init';
+export { autoInit, registerLocalizer, registerLocalizerBoot, getRegisteredLocalizer } from './auto-init';
 
 export default Localizer;
 

@@ -226,7 +226,7 @@ export class TransformersProvider {
     if (!this.summarizePipeline) throw new Error('Summarizer not loaded');
     const output = await this.summarizePipeline(text, {
       max_length: options?.maxLength ?? 130,
-      min_length: 30,
+      min_length: Math.min(30, Math.max(8, Math.floor(text.length / 4))),
     });
     const first = Array.isArray(output) ? output[0] : output;
     return first.summary_text;
