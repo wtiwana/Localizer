@@ -15,12 +15,31 @@ function normalizeBaseUrl(url: string): string {
 function resolveBundle(
   bundle: ModelBundleManifest,
   overrideUrl?: string,
+  localOnly = false,
 ): ModelSourceConfig {
   const baseUrl = normalizeBaseUrl(overrideUrl ?? bundle.url ?? bundle.mirrors?.[0] ?? '');
   return {
     baseUrl,
     manifest: bundle,
     engine: bundle.engine,
+    localOnly,
+  };
+}
+
+function resolveSelfHostedNlp(
+  registryManifest: RegistryManifest,
+  basePrefix: string,
+): ResolvedModelSources['nlp'] {
+  const resolveNlp = (name: keyof RegistryManifest['nlp']) => {
+    const bundle = registryManifest.nlp[name];
+    const url = `${basePrefix}nlp/${name}/`;
+    return resolveBundle({ ...bundle, url }, url, true);
+  };
+
+  return {
+    summarize: resolveNlp('summarize'),
+    classify: resolveNlp('classify'),
+    rewrite: resolveNlp('rewrite'),
   };
 }
 
@@ -58,7 +77,7 @@ export async function resolveModelSources(options: LocalizerOptions): Promise<{
       sizeMB: custom.sizeMB,
       url: customBase,
     };
-    const micro = resolveBundle(customBundle, customBase);
+    const micro = resolveBundle(customBundle, customBase, true);
     return {
       registryManifest,
       resolved: {
@@ -81,10 +100,14 @@ export async function resolveModelSources(options: LocalizerOptions): Promise<{
 
   const resolveTier = (tier: keyof RegistryManifest['tiers'], override?: string) => {
     if (basePrefix) {
-      const bundle = { ...registryManifest.tiers[tier], url: `${basePrefix}${tier}/` };
-      return resolveBundle(bundle, `${basePrefix}${tier}/`);
+      const url = `${basePrefix}${tier}/`;
+      const bundle = { ...registryManifest.tiers[tier], url };
+      return resolveBundle(bundle, url, true);
     }
-    return resolveBundle(registryManifest.tiers[tier], override ?? options.tiers?.[tier]?.url);
+    if (override) {
+      return resolveBundle(registryManifest.tiers[tier], override, true);
+    }
+    return resolveBundle(registryManifest.tiers[tier]);
   };
 
   return {
@@ -93,11 +116,13 @@ export async function resolveModelSources(options: LocalizerOptions): Promise<{
       micro: resolveTier('micro', options.tiers?.micro?.url),
       standard: resolveTier('standard', options.tiers?.standard?.url),
       premium: resolveTier('premium', options.tiers?.premium?.url),
-      nlp: {
-        summarize: resolveBundle(registryManifest.nlp.summarize),
-        classify: resolveBundle(registryManifest.nlp.classify),
-        rewrite: resolveBundle(registryManifest.nlp.rewrite),
-      },
+      nlp: basePrefix
+        ? resolveSelfHostedNlp(registryManifest, basePrefix)
+        : {
+            summarize: resolveBundle(registryManifest.nlp.summarize),
+            classify: resolveBundle(registryManifest.nlp.classify),
+            rewrite: resolveBundle(registryManifest.nlp.rewrite),
+          },
     },
   };
 }

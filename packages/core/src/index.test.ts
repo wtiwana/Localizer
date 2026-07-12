@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { computeCapabilityProfile } from '../src/capability';
 import { getRegistryManifest, PRESET_FEATURES, UPGRADE_THRESHOLDS } from '../src/registry';
 import { resolveModelSources } from '../src/model-source-resolver';
@@ -62,6 +62,33 @@ describe('resolveModelSources', () => {
       modelBaseUrl: '/localizer-models/',
     });
     expect(resolved.micro.baseUrl).toBe('/localizer-models/micro/');
+    expect(resolved.micro.localOnly).toBe(true);
+    expect(resolved.standard.baseUrl).toBe('/localizer-models/standard/');
+    expect(resolved.standard.localOnly).toBe(true);
+    expect(resolved.nlp.summarize.baseUrl).toBe('/localizer-models/nlp/summarize/');
+    expect(resolved.nlp.summarize.localOnly).toBe(true);
+    expect(resolved.nlp.classify.baseUrl).toBe('/localizer-models/nlp/classify/');
+    expect(resolved.nlp.rewrite.baseUrl).toBe('/localizer-models/nlp/rewrite/');
+  });
+
+  it('marks custom models as local-only', async () => {
+    const manifest = {
+      version: '1',
+      id: 'assistant',
+      engine: 'transformers' as const,
+      files: ['model.onnx', 'tokenizer.json'],
+    };
+
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => manifest,
+    })));
+
+    const { resolved } = await resolveModelSources({ customModel: '/models/assistant' });
+    expect(resolved.micro.baseUrl).toContain('/models/assistant/');
+    expect(resolved.micro.localOnly).toBe(true);
+
+    vi.unstubAllGlobals();
   });
 });
 

@@ -41,6 +41,20 @@ function baseOptions(): SerializedInitOptions {
 }
 
 describe('EngineManager tier routing', () => {
+  it('enables local transformers loading for self-hosted sources', async () => {
+    const manager = new EngineManager();
+    const transformers = (manager as unknown as { transformers: TransformersProvider }).transformers;
+    const configureSpy = vi.spyOn(transformers, 'configureModelSources');
+    vi.spyOn(transformers, 'loadChat').mockResolvedValue(undefined);
+
+    const options = baseOptions();
+    options.resolvedSources.micro.localOnly = true;
+
+    await manager.init(options);
+
+    expect(configureSpy).toHaveBeenCalledWith(true);
+  });
+
   it('falls back to micro transformers chat when standard webllm is not loaded', async () => {
     const manager = new EngineManager();
     const transformers = (manager as unknown as { transformers: TransformersProvider }).transformers;

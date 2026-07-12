@@ -11,6 +11,7 @@ import type {
 } from '../types';
 import { TransformersProvider } from './transformers-provider';
 import { WebLLMProvider } from './webllm-provider';
+import { hasLocalModelSources } from './transformers-config';
 
 type ChatBackend = 'transformers' | 'webllm';
 
@@ -29,6 +30,7 @@ export class EngineManager {
   async init(options: SerializedInitOptions, onProgress?: (event: ProgressEvent) => void): Promise<void> {
     this.initOptions = options;
     this.transformers.cacheEnabled = options.cache === 'indexeddb';
+    this.transformers.configureModelSources(hasLocalModelSources(options.resolvedSources));
     this.transformers.setNlpModels({
       summarize: options.resolvedSources.nlp.summarize,
       classify: options.resolvedSources.nlp.classify,
