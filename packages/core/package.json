@@ -34,7 +34,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@huggingface/transformers": "^3.4.0",
+    "@huggingface/transformers": "^4.2.0",
     "@mlc-ai/web-llm": "^0.2.79",
     "idb-keyval": "^6.2.1"
   },
