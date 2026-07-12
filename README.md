@@ -29,9 +29,10 @@ Built for web developers who want AI features without the operational cost, priv
 - **Self-hosted models** — Pull weights with the CLI, host them on your own CDN or static server, and load entirely offline at runtime
 - **Custom page models** — Prepare FAQ/training bundles with the CLI for page-specific assistants
 - **Declarative HTML actions** — Add `data-localizer-action` attributes for summarize/classify/rewrite without writing JavaScript
-- **Drop-in chat widget** — One script tag for a floating chat UI
+- **Drop-in chat widget** — One script tag for a floating chat UI with theme, accent color, and accessibility support
 - **Progressive enhancement** — WebGPU when available, WASM fallback; respects `navigator.connection.saveData`
 - **IndexedDB caching** — Model weights cached across return visits
+- **CDN bundle** — IIFE build available for script-tag usage without a bundler
 
 ## Quick start
 
@@ -81,6 +82,7 @@ public/localizer-models/
   registry.json
   micro/
   standard/
+  premium/
   nlp/summarize/
   nlp/classify/
   nlp/rewrite/
@@ -100,6 +102,8 @@ At runtime, Localizer loads weights from your `modelBaseUrl` — not from Huggin
 
 ## CDN usage
 
+### ES module (recommended)
+
 ```html
 <script type="module">
   import { Localizer } from 'https://cdn.jsdelivr.net/npm/localizer@0.1/+esm';
@@ -107,15 +111,49 @@ At runtime, Localizer loads weights from your `modelBaseUrl` — not from Huggin
 </script>
 ```
 
+### IIFE bundle
+
+For environments without a bundler or import maps:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/localizer@0.1/dist/cdn/localizer.cdn.global.js"></script>
+<script>
+  Localizer.create({ loadMicroAtStart: true }).then((ai) => {
+    console.log('Localizer ready on', ai.activeTier, 'tier');
+  });
+</script>
+```
+
 ## Drop-in widget
 
 ```html
 <script
+  type="module"
   src="https://cdn.jsdelivr.net/npm/localizer@0.1/dist/widget.js"
-  data-localizer="chat"
+  data-title="Help"
+  data-theme="auto"
+  data-accent-color="#2563eb"
+  data-position="bottom-right"
+  data-locale="en"
   data-custom-model="/models/assistant"
 ></script>
 ```
+
+Or programmatically:
+
+```typescript
+import { createWidget } from 'localizer/widget';
+
+createWidget({
+  title: 'Help Bot',
+  theme: 'dark',
+  accentColor: '#7c3aed',
+  position: 'bottom-left',
+  locale: 'en',
+});
+```
+
+Widget options: `title`, `theme` (`light` | `dark` | `auto`), `accentColor`, `position` (`bottom-right` | `bottom-left`), `locale`, `customModel`.
 
 ## Declarative HTML actions
 
@@ -138,13 +176,25 @@ Add AI features with data attributes — no JavaScript required:
 
 Supported actions: `summarize`, `classify`, `rewrite`, `chat`.
 
+Use `data-tone` (`formal`, `casual`, `concise`) on rewrite actions.
+
 ## Custom FAQ model
 
-Prepare a page-specific assistant bundle from FAQ data:
+Prepare a page-specific assistant bundle from FAQ data or documentation pages:
 
 ```bash
+# From FAQ JSON
 npx @localizer/cli train --data ./faq.json --output ./public/models/assistant
-npx @localizer/cli validate ./public/models/assistant
+
+# Synthesize Q&A from HTML documentation
+npx @localizer/cli train \
+  --pages "./docs/**/*.html" \
+  --auto-qa \
+  --qa-count 50 \
+  --output ./public/models/assistant
+
+# Validate before deployment
+npx @localizer/cli validate ./public/models/assistant --strict
 ```
 
 ```typescript
@@ -154,17 +204,17 @@ const ai = await Localizer.create({
 });
 ```
 
-> **Note:** `cli train` prepares training metadata and manifests. Fine-tuning and ONNX export are manual next steps — see the CLI output for guidance.
+> **Note:** `cli train` prepares training metadata and manifests. Fine-tuning and ONNX export are manual next steps — see the CLI output for guidance. After exporting ONNX weights, run `localizer export` to regenerate `manifest.json` from the bundle directory.
 
 ## CLI reference
 
 | Command | Description |
 |---------|-------------|
 | `localizer pull` | Download model bundles for self-hosting |
-| `localizer train` | Prepare a custom model bundle from FAQ/training data |
+| `localizer train` | Prepare a custom model bundle from FAQ/training data or pages |
 | `localizer validate` | Check a model bundle directory for required files |
-| `localizer validate --strict` | Fail when runtime weights (.onnx or .bin) are missing |
-| `localizer export` | Generate `manifest.json` for an existing bundle |
+| `localizer validate --strict` | Fail when runtime weights (`.onnx` or `.bin`) are missing |
+| `localizer export` | Scan a bundle directory and generate `manifest.json` |
 
 ### `pull` options
 
@@ -175,12 +225,32 @@ const ai = await Localizer.create({
 | `--metadata-only` | Write manifests only, skip weight downloads |
 | `--force` | Re-download files even if they already exist |
 
+### `train` options
+
+| Flag | Description |
+|------|-------------|
+| `-d, --data <file>` | FAQ JSON file with `question`/`answer` pairs |
+| `-p, --pages <glob>` | Documentation pages to include (e.g. `./docs/**/*.html`) |
+| `-o, --output <dir>` | Output directory (default: `./public/models/assistant`) |
+| `--base <model>` | Base model id (default: `HuggingFaceTB/SmolLM2-135M-Instruct`) |
+| `--auto-qa` | Synthesize Q&A pairs from `--pages` |
+| `--qa-count <count>` | Number of synthetic Q&A pairs (default: `100`) |
+
+### `export` options
+
+| Flag | Description |
+|------|-------------|
+| `-o, --output <dir>` | Model bundle directory (required) |
+| `--id <id>` | Model id written to manifest (default: `custom-assistant`) |
+
+The export command scans the directory, detects the engine (`transformers` or `webllm`), lists all files, and computes approximate size in MB.
+
 ## Model tiers
 
 | Tier | Model | Size | Engine | Use case |
 |------|-------|------|--------|----------|
 | **micro** | SmolLM2-135M ONNX | ~78 MB | Transformers.js | Instant chat at page load |
-| **standard** | Gemma 270M | ~270 MB | WebLLM | Higher-quality chat (WebGPU) |
+| **standard** | Gemma 3 270M | ~270 MB | WebLLM | Higher-quality chat (WebGPU) |
 | **premium** | Gemma 3 1B | ~550 MB | WebLLM | Max preset on high-capability devices |
 | **nlp** | DistilBERT, DistilBART, Flan-T5 | ~70–120 MB each | Transformers.js | Summarize, classify, rewrite |
 
@@ -201,48 +271,56 @@ git clone https://github.com/wtiwana/Localizer.git
 cd Localizer
 npm install
 npm run build
+npm run lint
 npm test
 npm run dev
 ```
 
-### Demo: self-hosted mode
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full contributor guide.
 
-Try the full pull → host → load workflow:
+### Demo
+
+The demo app includes a chat playground, NLP action buttons, a capability panel, and a widget preview.
 
 ```bash
-# Download micro model weights (~78 MB)
-npm run prepare:demo-self-hosted
+# Registry mode (default)
+npm run dev
+# http://localhost:5173/
 
-# Start the demo
+# Self-hosted mode
+npm run prepare:demo-self-hosted
 npm run dev:self-hosted
-# Open http://localhost:5173/?mode=self-hosted
+# http://localhost:5173/?mode=self-hosted
 ```
 
-The demo also supports registry mode (default) at `http://localhost:5173/`.
+### Testing
+
+```bash
+npm test                  # Unit tests (CLI + core)
+npm run test:e2e          # Playwright E2E for demo app
+npm run smoke:self-hosted # Self-hosted bundle layout smoke test
+```
 
 ### CI
 
 GitHub Actions runs on every push and PR to `main`:
 
-- **build-and-test** — Build all packages and run the test suite
+- **build-and-test** — Build all packages, lint, and run unit tests
+- **e2e** — Playwright tests against the demo app
 - **smoke-self-hosted** — Verify self-hosted bundle layout and build the demo
-
-```bash
-npm run smoke:self-hosted   # Run the layout smoke test locally
-```
 
 ## Browser requirements
 
 - Modern Chromium, Firefox, or Safari
 - WebGPU recommended for standard/premium tiers (WASM fallback for micro + NLP)
-- ~300 MB RAM for micro tier; ~600 MB if standard tier upgrades
+- ~300 MB RAM for micro tier; ~600 MB for standard; ~1 GB for premium
 
 ## Cost model
 
 | Who | Pays |
 |-----|------|
 | Developer | Nothing for inference |
-| Visitor | One-time model download (~50–270 MB), cached locally |
+| Visitor | One-time model download (~78–550 MB depending on tier), cached locally |
 
 ## Documentation
 
@@ -250,6 +328,8 @@ npm run smoke:self-hosted   # Run the layout smoke test locally
 - [INTEGRATION.md](./INTEGRATION.md) — Full integration patterns and loading behavior
 - [docs/API.md](./docs/API.md) — API reference
 - [models-registry/README.md](./models-registry/README.md) — Registry metadata and tier details
+- [CONTRIBUTING.md](./CONTRIBUTING.md) — Development setup and contribution guide
+- [CHANGELOG.md](./CHANGELOG.md) — Release history
 
 ## License
 
