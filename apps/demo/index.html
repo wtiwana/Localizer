@@ -15,6 +15,14 @@
           This page runs a small language model entirely on your device — no API keys, no server calls.
           Type a message below and watch it respond locally.
         </p>
+
+        <nav class="mode-nav" aria-label="Demo mode">
+          <a href="?" data-demo-mode="registry" class="mode-link active">Registry</a>
+          <a href="?mode=self-hosted" data-demo-mode="self-hosted" class="mode-link">Self-hosted</a>
+        </nav>
+
+        <div id="mode-badge" class="badge hidden" role="status"></div>
+
         <div id="status" class="status" role="status" aria-live="polite">
           <span class="status-dot" aria-hidden="true"></span>
           <span id="status-text">Initializing model…</span>
@@ -41,11 +49,24 @@
         </section>
 
         <aside class="sidebar">
-          <section class="card code-card" aria-labelledby="code-heading">
-            <h2 id="code-heading">Get started in 5 lines</h2>
-            <pre class="code-block"><code>import { Localizer } from 'localizer';
+          <section id="self-hosted-setup" class="card setup-card hidden" aria-labelledby="setup-heading">
+            <h2 id="setup-heading">Self-hosted setup</h2>
+            <p class="setup-desc">
+              Pull model weights into the demo app, then load them from your own static hosting path.
+            </p>
+            <pre class="code-block"><code># Download the micro chat bundle (~78 MB)
+npm run prepare:demo-self-hosted
 
-const ai = await Localizer.create({
+# Start the demo in self-hosted mode
+npm run dev:self-hosted</code></pre>
+            <p class="hint">
+              Models are served from <code>/localizer-models/</code> and never fetched from Hugging Face at runtime.
+            </p>
+          </section>
+
+          <section class="card code-card" aria-labelledby="code-heading">
+            <h2 id="code-heading">Get started in a few lines</h2>
+            <pre id="code-example" class="code-block"><code>const ai = await Localizer.create({
   loadMicroAtStart: true,
 });
 
@@ -54,7 +75,7 @@ for await (const chunk of ai.chat.stream('Hello!')) {
 }</code></pre>
             <p class="hint">
               Install with <code>npm install localizer</code> or use the CDN — see the
-              <a href="https://github.com/localizer-ai/localizer" target="_blank" rel="noopener">README</a>.
+              <a href="https://github.com/wtiwana/Localizer" target="_blank" rel="noopener">README</a>.
             </p>
           </section>
 

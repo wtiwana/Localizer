@@ -120,6 +120,8 @@ export interface ModelSourceConfig {
   baseUrl: string;
   manifest: ModelBundleManifest;
   engine: 'transformers' | 'webllm';
+  /** When true, load weights from baseUrl only (self-hosted or custom bundles). */
+  localOnly?: boolean;
 }
 
 export type WorkerRequest =

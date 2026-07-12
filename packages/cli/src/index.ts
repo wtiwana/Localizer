@@ -17,8 +17,14 @@ program
   .description('Download registry model bundles for self-hosting')
   .requiredOption('-o, --output <dir>', 'Output directory')
   .option('-t, --tier <tiers>', 'Comma-separated tiers: micro,standard,premium,nlp', 'micro,standard')
-  .action(async (options: { output: string; tier: string }) => {
-    await pullModels(options.output, options.tier.split(',').map((value) => value.trim()));
+  .option('--metadata-only', 'Write manifests only, skip weight downloads', false)
+  .option('--force', 'Re-download files even if they already exist', false)
+  .action(async (options: { output: string; tier: string; metadataOnly?: boolean; force?: boolean }) => {
+    await pullModels(
+      options.output,
+      options.tier.split(',').map((value) => value.trim()),
+      { metadataOnly: options.metadataOnly, force: options.force },
+    );
   });
 
 program
