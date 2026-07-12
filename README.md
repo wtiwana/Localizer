@@ -163,6 +163,7 @@ const ai = await Localizer.create({
 | `localizer pull` | Download model bundles for self-hosting |
 | `localizer train` | Prepare a custom model bundle from FAQ/training data |
 | `localizer validate` | Check a model bundle directory for required files |
+| `localizer validate --strict` | Fail when runtime weights (.onnx or .bin) are missing |
 | `localizer export` | Generate `manifest.json` for an existing bundle |
 
 ### `pull` options
@@ -180,7 +181,7 @@ const ai = await Localizer.create({
 |------|-------|------|--------|----------|
 | **micro** | SmolLM2-135M ONNX | ~78 MB | Transformers.js | Instant chat at page load |
 | **standard** | Gemma 270M | ~270 MB | WebLLM | Higher-quality chat (WebGPU) |
-| **premium** | Gemma 270M | ~270 MB | WebLLM | Max preset on high-capability devices |
+| **premium** | Gemma 3 1B | ~550 MB | WebLLM | Max preset on high-capability devices |
 | **nlp** | DistilBERT, DistilBART, Flan-T5 | ~70–120 MB each | Transformers.js | Summarize, classify, rewrite |
 
 Background upgrade to standard tier triggers automatically when the device capability score is ≥ 40 (WebGPU, memory, network speed). Premium upgrades at ≥ 70 with the `max` preset.
@@ -247,6 +248,7 @@ npm run smoke:self-hosted   # Run the layout smoke test locally
 
 - [README](https://github.com/wtiwana/Localizer/blob/main/README.md) — Project overview (this file)
 - [INTEGRATION.md](./INTEGRATION.md) — Full integration patterns and loading behavior
+- [docs/API.md](./docs/API.md) — API reference
 - [models-registry/README.md](./models-registry/README.md) — Registry metadata and tier details
 
 ## License

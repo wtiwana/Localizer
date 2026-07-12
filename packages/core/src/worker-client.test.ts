@@ -1,11 +1,13 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { WorkerClient } from '../src/worker-client';
-import type { WorkerResponse } from '../src/types';
+import { WorkerClient } from './worker-client';
+import type { WorkerResponse } from './types';
 
 function attachWorker(client: WorkerClient, worker: MockWorker): void {
   const internal = client as unknown as {
     worker: MockWorker;
     handleMessage: (message: WorkerResponse) => void;
+    doInit: () => Promise<void>;
+    schedulePrefetch: (tier: 'standard' | 'premium') => void;
   };
   internal.worker = worker;
   worker.onmessage = (event) => internal.handleMessage(event.data);
@@ -122,5 +124,49 @@ describe('WorkerClient chatStream', () => {
     mockWorker.emit({ type: 'done', id: 'test-request-id', result: null });
 
     await expect(consume).resolves.toEqual(['Hi', ' there']);
+  });
+});
+
+describe('WorkerClient premium prefetch', () => {
+  let mockWorker: MockWorker;
+
+  beforeEach(() => {
+    mockWorker = new MockWorker();
+    vi.stubGlobal('Worker', vi.fn(() => mockWorker));
+    vi.stubGlobal('crypto', {
+      randomUUID: () => 'prefetch-request-id',
+    });
+    vi.stubGlobal('requestIdleCallback', (cb: IdleRequestCallback) => {
+      cb({ didTimeout: false, timeRemaining: () => 50 } as IdleDeadline);
+      return 1;
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('schedules premium prefetch when preset is max and score qualifies', () => {
+    const client = new WorkerClient(
+      { preset: 'max', loadMicroAtStart: true },
+      {
+        score: 85,
+        tier: 'premium',
+        webgpu: true,
+        deviceMemoryGB: 8,
+        connection: 'fast',
+        saveData: false,
+      },
+    );
+
+    const prefetchSpy = vi.spyOn(client, 'prefetchTier').mockResolvedValue(undefined);
+    const internal = client as unknown as {
+      schedulePrefetch: (tier: 'standard' | 'premium') => void;
+    };
+
+    internal.schedulePrefetch('premium');
+
+    expect(prefetchSpy).toHaveBeenCalledWith('premium');
+    expect(client.tierManager.shouldPrefetchPremium()).toBe(true);
   });
 });

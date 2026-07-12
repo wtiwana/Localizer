@@ -22,7 +22,7 @@ export const UPGRADE_THRESHOLDS = {
 export const MODEL_TIERS = {
   micro: { model: 'onnx-community/SmolLM2-135M-Instruct-ONNX-GQA', sizeMB: 78, engine: 'transformers' as const },
   standard: { model: 'mlc-ai/gemma-3-270m-it-q4f16_1-MLC', sizeMB: 270, engines: ['webllm', 'transformers'] as const },
-  premium: { model: 'mlc-ai/gemma-3-270m-it-q4f16_1-MLC', sizeMB: 270, engines: ['webllm'] as const, minScore: 70 },
+  premium: { model: 'mlc-ai/gemma-3-1b-it-q4f16_1-MLC', sizeMB: 550, engines: ['webllm'] as const, minScore: 70 },
 };
 
 export const PRESET_FEATURES = {

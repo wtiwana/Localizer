@@ -19,6 +19,9 @@
     "./widget": {
       "types": "./dist/widget.d.ts",
       "import": "./dist/widget.js"
+    },
+    "./cdn": {
+      "import": "./dist/cdn/localizer.cdn.global.js"
     }
   },
   "files": [
@@ -36,6 +39,7 @@
     "idb-keyval": "^6.2.1"
   },
   "devDependencies": {
+    "happy-dom": "^17.4.4",
     "tsup": "^8.4.0",
     "typescript": "^5.8.3",
     "vitest": "^3.1.1"
