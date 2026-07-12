@@ -11,6 +11,10 @@
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "dev": "npm run dev -w @localizer/demo",
+    "dev:self-hosted": "npm run prepare:demo-self-hosted && npm run dev -w @localizer/demo",
+    "prepare:demo-self-hosted": "npm run build -w @localizer/cli && node packages/cli/dist/index.js pull -o apps/demo/public/localizer-models -t micro",
+    "prepare:demo-self-hosted:ci": "npm run build -w @localizer/cli && node packages/cli/dist/index.js pull -o apps/demo/public/localizer-models -t micro,nlp --metadata-only",
+    "smoke:self-hosted": "node scripts/smoke-self-hosted.mjs",
     "lint": "npm run lint --workspaces --if-present"
   },
   "engines": {

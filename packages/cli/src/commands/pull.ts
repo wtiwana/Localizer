@@ -7,7 +7,10 @@ import {
   type RegistryBundle,
 } from './download.js';
 
-const REGISTRY_PATH = '../../../core/src/model-registry/v1.json';
+const REGISTRY_CANDIDATES = [
+  '../../../core/src/model-registry/v1.json',
+  '../../core/src/model-registry/v1.json',
+];
 
 export interface PullOptions {
   metadataOnly?: boolean;
@@ -115,8 +118,18 @@ function accumulateTotals(
 }
 
 async function loadEmbeddedRegistry(): Promise<RegistryManifest> {
-  const registryPath = fileURLToPath(new URL(REGISTRY_PATH, import.meta.url));
-  return JSON.parse(await readFile(registryPath, 'utf8')) as RegistryManifest;
+  let lastError: Error | null = null;
+
+  for (const candidate of REGISTRY_CANDIDATES) {
+    try {
+      const registryPath = fileURLToPath(new URL(candidate, import.meta.url));
+      return JSON.parse(await readFile(registryPath, 'utf8')) as RegistryManifest;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+    }
+  }
+
+  throw lastError ?? new Error('Unable to locate embedded registry manifest');
 }
 
 export { loadEmbeddedRegistry };

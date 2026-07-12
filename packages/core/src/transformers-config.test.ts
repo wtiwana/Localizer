@@ -8,12 +8,13 @@ import type { ModelBundleManifest, ModelSourceConfig } from '../src/types';
 
 function source(
   baseUrl: string,
-  manifest: Partial<ModelBundleManifest> & { engine: ModelBundleManifest['engine'] },
+  manifest: Partial<ModelBundleManifest> & Pick<ModelBundleManifest, 'engine'>,
   localOnly?: boolean,
 ): ModelSourceConfig {
   return {
     baseUrl,
     localOnly,
+    engine: manifest.engine,
     manifest: {
       version: '1',
       files: manifest.files ?? [],

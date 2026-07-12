@@ -133,6 +133,42 @@ code {
   font-weight: 500;
 }
 
+.mode-nav {
+  display: inline-flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.mode-link {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 999px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+
+.mode-link:hover {
+  color: var(--text);
+}
+
+.mode-link.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.setup-desc {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
 .hidden {
   display: none;
 }

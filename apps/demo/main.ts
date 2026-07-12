@@ -1,18 +1,39 @@
-import { Localizer, autoInit, registerLocalizerBoot } from 'localizer';
+import { Localizer, autoInit, registerLocalizerBoot, type LocalizerOptions } from 'localizer';
 
 const statusTextEl = document.querySelector<HTMLSpanElement>('#status-text')!;
 const statusEl = document.querySelector<HTMLDivElement>('#status')!;
 const tierBadgeEl = document.querySelector<HTMLDivElement>('#tier-badge')!;
+const modeBadgeEl = document.querySelector<HTMLDivElement>('#mode-badge')!;
 const chatLogEl = document.querySelector<HTMLDivElement>('#chat-log')!;
 const chatFormEl = document.querySelector<HTMLFormElement>('#chat-form')!;
 const chatInputEl = document.querySelector<HTMLInputElement>('#chat-input')!;
 const chatSubmitEl = document.querySelector<HTMLButtonElement>('#chat-submit')!;
+const codeExampleEl = document.querySelector<HTMLPreElement>('#code-example')!;
+const setupCardEl = document.querySelector<HTMLElement>('#self-hosted-setup')!;
+const modeLinks = document.querySelectorAll<HTMLAnchorElement>('[data-demo-mode]');
+
+const SELF_HOSTED_BASE_URL = '/localizer-models/';
+const CHAT_SYSTEM = 'You are Localizer, a helpful AI assistant that runs locally in the browser. Answer briefly and clearly in 1-3 sentences.';
+
+type DemoMode = 'registry' | 'self-hosted';
 
 let placeholderRemoved = false;
+
+function getDemoMode(): DemoMode {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('mode') === 'self-hosted' ? 'self-hosted' : 'registry';
+}
 
 function setStatus(text: string, ready = false): void {
   statusTextEl.textContent = text;
   statusEl.classList.toggle('ready', ready);
+  statusEl.classList.remove('error');
+}
+
+function setErrorStatus(text: string): void {
+  statusTextEl.textContent = text;
+  statusEl.classList.add('error');
+  statusEl.classList.remove('ready');
 }
 
 function enableChat(): void {
@@ -36,15 +57,85 @@ function appendMessage(role: 'you' | 'assistant', text: string): HTMLParagraphEl
   return line;
 }
 
-async function boot(): Promise<void> {
-  setStatus('Starting local AI…');
+function updateModeUi(mode: DemoMode): void {
+  document.body.dataset.demoMode = mode;
+  modeBadgeEl.textContent = mode === 'self-hosted' ? 'Self-hosted models' : 'Registry models';
+  modeBadgeEl.classList.remove('hidden');
+  setupCardEl.classList.toggle('hidden', mode !== 'self-hosted');
 
-  const bootPromise = Localizer.create({
+  modeLinks.forEach((link) => {
+    link.classList.toggle('active', link.dataset.demoMode === mode);
+  });
+
+  if (mode === 'self-hosted') {
+    codeExampleEl.textContent = `const ai = await Localizer.create({
+  models: 'self-hosted',
+  modelBaseUrl: '${SELF_HOSTED_BASE_URL}',
+  loadMicroAtStart: true,
+});
+
+for await (const chunk of ai.chat.stream('Hello!')) {
+  console.log(chunk);
+}`;
+    return;
+  }
+
+  codeExampleEl.textContent = `const ai = await Localizer.create({
+  loadMicroAtStart: true,
+});
+
+for await (const chunk of ai.chat.stream('Hello!')) {
+  console.log(chunk);
+}`;
+}
+
+function buildLocalizerOptions(mode: DemoMode): LocalizerOptions {
+  if (mode === 'self-hosted') {
+    return {
+      models: 'self-hosted',
+      modelBaseUrl: SELF_HOSTED_BASE_URL,
+      preset: 'basic',
+      loadMicroAtStart: true,
+      upgradePolicy: 'never',
+    };
+  }
+
+  return {
     preset: 'basic',
     loadMicroAtStart: true,
     upgradePolicy: 'never',
+  };
+}
+
+async function verifySelfHostedBundle(): Promise<boolean> {
+  try {
+    const response = await fetch(`${SELF_HOSTED_BASE_URL}micro/manifest.json`);
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function boot(): Promise<void> {
+  const mode = getDemoMode();
+  updateModeUi(mode);
+
+  if (mode === 'self-hosted') {
+    setStatus('Checking self-hosted bundle…');
+    const bundleReady = await verifySelfHostedBundle();
+    if (!bundleReady) {
+      setErrorStatus('Self-hosted bundle missing. Run: npm run prepare:demo-self-hosted');
+      return;
+    }
+  }
+
+  setStatus(mode === 'self-hosted' ? 'Loading self-hosted model…' : 'Starting local AI…');
+
+  const bootPromise = Localizer.create({
+    ...buildLocalizerOptions(mode),
     onProgress: (event) => {
-      setStatus(`Loading ${event.tier ?? 'model'}… ${event.percent}%`);
+      const label = mode === 'self-hosted' ? 'self-hosted' : (event.tier ?? 'model');
+      setStatus(`Loading ${label}… ${event.percent}%`);
     },
     onTierChange: ({ from, to }) => {
       tierBadgeEl.classList.remove('hidden');
@@ -56,8 +147,8 @@ async function boot(): Promise<void> {
 
   try {
     const ai = await bootPromise;
-
-    setStatus(`Ready — running on ${ai.activeTier} tier`, true);
+    const modeLabel = mode === 'self-hosted' ? 'self-hosted micro' : `${ai.activeTier} tier`;
+    setStatus(`Ready — running on ${modeLabel}`, true);
     enableChat();
 
     chatFormEl.addEventListener('submit', (event) => {
@@ -68,13 +159,10 @@ async function boot(): Promise<void> {
       void runChat(ai, prompt);
     });
   } catch (error) {
-    statusEl.classList.add('error');
-    setStatus(error instanceof Error ? error.message : 'Failed to start local AI');
+    setErrorStatus(error instanceof Error ? error.message : 'Failed to start local AI');
     console.error('[Localizer demo]', error);
   }
 }
-
-const CHAT_SYSTEM = 'You are Localizer, a helpful AI assistant that runs locally in the browser. Answer briefly and clearly in 1-3 sentences.';
 
 async function runChat(ai: Localizer, prompt: string): Promise<void> {
   appendMessage('you', prompt);
