@@ -36,7 +36,7 @@
   "dependencies": {
     "@huggingface/transformers": "^3.4.0",
     "@mlc-ai/web-llm": "^0.2.79",
-    "idb-keyval": "^6.2.1"
+    "idb-keyval": "^6.3.0"
   },
   "devDependencies": {
     "happy-dom": "^17.4.4",
