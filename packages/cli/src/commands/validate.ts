@@ -1,9 +1,20 @@
 import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { scanBundleDir } from '../utils/bundle-scan.js';
 
 const REQUIRED_FILES = ['manifest.json'];
 
-export async function validateBundle(dir: string): Promise<void> {
+export interface ValidateOptions {
+  strict?: boolean;
+}
+
+export interface ValidateResult {
+  valid: boolean;
+  missing: string[];
+  hasRuntimeWeights: boolean;
+}
+
+export async function validateBundle(dir: string, options: ValidateOptions = {}): Promise<ValidateResult> {
   for (const file of REQUIRED_FILES) {
     await access(path.join(dir, file));
   }
@@ -14,6 +25,7 @@ export async function validateBundle(dir: string): Promise<void> {
     id?: string;
   };
 
+  const scanned = await scanBundleDir(dir);
   const missing: string[] = [];
   for (const file of manifest.files) {
     try {
@@ -23,16 +35,25 @@ export async function validateBundle(dir: string): Promise<void> {
     }
   }
 
+  const hasRuntimeWeights = scanned.hasRuntimeWeights;
+  const valid = missing.length === 0 && (!options.strict || hasRuntimeWeights);
+
   if (missing.length > 0) {
     console.warn(`Bundle ${dir} is partially ready. Missing files:`);
     for (const file of missing) console.warn(`  - ${file}`);
     if (missing.some((file) => file.endsWith('.onnx'))) {
       console.warn('ONNX weights are not present yet. Training/export is still required for runtime inference.');
     }
+  } else if (options.strict && !hasRuntimeWeights) {
+    console.warn(`Bundle ${dir} is missing runtime weights (.onnx or .bin files).`);
   } else {
     console.log(`Bundle ${dir} is valid.`);
   }
 
   console.log(`Engine: ${manifest.engine}`);
   console.log(`Model id: ${manifest.id ?? 'unknown'}`);
+  console.log(`Files on disk: ${scanned.files.length}`);
+  console.log(`Approx size: ${scanned.sizeMB} MB`);
+
+  return { valid, missing, hasRuntimeWeights };
 }

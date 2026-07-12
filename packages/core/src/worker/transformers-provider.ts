@@ -53,9 +53,10 @@ export class TransformersProvider {
   }
 
   private async getDevice(): Promise<'webgpu' | 'wasm'> {
-    if (typeof navigator !== 'undefined' && 'gpu' in navigator && navigator.gpu) {
+    const gpu = (navigator as Navigator & { gpu?: { requestAdapter(): Promise<unknown> } }).gpu;
+    if (typeof navigator !== 'undefined' && gpu) {
       try {
-        const adapter = await navigator.gpu.requestAdapter();
+        const adapter = await gpu.requestAdapter();
         if (adapter) return 'webgpu';
       } catch {
         // fall through
@@ -101,7 +102,11 @@ export class TransformersProvider {
     const loadOptions = this.pipelineLoadOptions(modelRef, onProgress);
     loadOptions.device = device;
 
-    this.chatPipeline = (await pipeline('text-generation', modelRef.path, loadOptions)) as TextGenerationPipeline;
+    this.chatPipeline = (await pipeline(
+      'text-generation',
+      modelRef.path,
+      loadOptions,
+    )) as unknown as TextGenerationPipeline;
     this.emit(onProgress, { tier: 'micro', percent: 100, status: 'Micro chat model ready' });
   }
 
@@ -112,7 +117,11 @@ export class TransformersProvider {
     const device = await this.getDevice();
     const loadOptions = this.pipelineLoadOptions(modelRef, onProgress, 'nlp', 'summarize');
     loadOptions.device = device;
-    this.summarizePipeline = await pipeline('summarization', modelRef.path, loadOptions);
+    this.summarizePipeline = (await pipeline(
+      'summarization',
+      modelRef.path,
+      loadOptions,
+    )) as unknown as typeof this.summarizePipeline;
   }
 
   async loadClassify(onProgress?: (event: ProgressEvent) => void): Promise<void> {
@@ -122,7 +131,11 @@ export class TransformersProvider {
     const device = await this.getDevice();
     const loadOptions = this.pipelineLoadOptions(modelRef, onProgress, 'nlp', 'classify');
     loadOptions.device = device;
-    this.classifyPipeline = await pipeline('text-classification', modelRef.path, loadOptions);
+    this.classifyPipeline = (await pipeline(
+      'text-classification',
+      modelRef.path,
+      loadOptions,
+    )) as unknown as typeof this.classifyPipeline;
   }
 
   async loadRewrite(onProgress?: (event: ProgressEvent) => void): Promise<void> {
@@ -132,7 +145,11 @@ export class TransformersProvider {
     const device = await this.getDevice();
     const loadOptions = this.pipelineLoadOptions(modelRef, onProgress, 'nlp', 'rewrite');
     loadOptions.device = device;
-    this.rewritePipeline = await pipeline('translation', modelRef.path, loadOptions);
+    this.rewritePipeline = (await pipeline(
+      'translation',
+      modelRef.path,
+      loadOptions,
+    )) as unknown as typeof this.rewritePipeline;
   }
 
   private formatPrompt(messages: ChatMessage[], system?: string): string {
@@ -182,7 +199,7 @@ export class TransformersProvider {
     if (!this.chatPipeline) throw new Error('Chat pipeline not loaded');
     const prompt = this.formatPrompt(messages, options?.system);
     const result = await this.chatPipeline(prompt, this.generationOptions(options));
-    const generated = Array.isArray(result) ? result[0]?.generated_text : (result as { generated_text?: string }).generated_text;
+    const generated = extractGeneratedText(result);
     return (generated ?? '').trim();
   }
 
@@ -210,9 +227,7 @@ export class TransformersProvider {
       streamer,
     }).then((result) => {
       if (!streamedAny) {
-        const generated = Array.isArray(result)
-          ? result[0]?.generated_text
-          : (result as { generated_text?: string }).generated_text;
+        const generated = extractGeneratedText(result);
         const text = (generated ?? '').trim();
         if (text) {
           queue.push(text);
@@ -245,19 +260,22 @@ export class TransformersProvider {
     const output = await this.summarizePipeline(text, {
       max_length: options?.maxLength ?? 130,
       min_length: Math.min(30, Math.max(8, Math.floor(text.length / 4))),
-    });
-    const first = Array.isArray(output) ? output[0] : output;
-    return first.summary_text;
+    } as never);
+    const first = (Array.isArray(output) ? output[0] : output) as { summary_text?: string };
+    return first.summary_text ?? '';
   }
 
   async classify(text: string, options?: ClassifyOptions): Promise<ClassifyResult> {
     await this.loadClassify();
     if (!this.classifyPipeline) throw new Error('Classifier not loaded');
-    const output = await this.classifyPipeline(text, { topk: options?.labels?.length ?? 2 });
-    const labels = (Array.isArray(output) ? output : [output]).map((item) => ({
-      label: String(item.label),
-      score: Number(item.score),
-    }));
+    const output = await this.classifyPipeline(text, { top_k: options?.labels?.length ?? 2 } as never);
+    const labels = (Array.isArray(output) ? output : [output]).map((item) => {
+      const entry = item as { label?: string; score?: number };
+      return {
+        label: String(entry.label),
+        score: Number(entry.score),
+      };
+    });
     return {
       label: labels[0]?.label ?? 'unknown',
       score: labels[0]?.score ?? 0,
@@ -275,9 +293,16 @@ export class TransformersProvider {
         ? `rewrite casually: ${text}`
         : `rewrite concisely: ${text}`;
     const output = await this.rewritePipeline(prompt);
-    const first = Array.isArray(output) ? output[0] : output;
-    return first.translation_text;
+    const first = (Array.isArray(output) ? output[0] : output) as { translation_text?: string };
+    return first.translation_text ?? '';
   }
 }
 
 type ModelTierLabel = ProgressEvent['tier'];
+
+function extractGeneratedText(result: unknown): string | undefined {
+  if (Array.isArray(result)) {
+    return (result[0] as { generated_text?: string } | undefined)?.generated_text;
+  }
+  return (result as { generated_text?: string }).generated_text;
+}

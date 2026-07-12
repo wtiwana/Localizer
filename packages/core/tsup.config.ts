@@ -21,4 +21,20 @@ export default defineConfig([
       };
     },
   },
+  {
+    entry: {
+      'localizer.cdn': 'src/index.ts',
+    },
+    format: ['iife'],
+    globalName: 'Localizer',
+    outDir: 'dist/cdn',
+    sourcemap: true,
+    treeshake: true,
+    external: ['@huggingface/transformers', '@mlc-ai/web-llm'],
+    esbuildOptions(options) {
+      options.banner = {
+        js: '/* Localizer CDN bundle — use with type="module" or import maps for dependencies */',
+      };
+    },
+  },
 ]);

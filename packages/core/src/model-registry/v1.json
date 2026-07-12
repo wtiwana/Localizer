@@ -37,20 +37,22 @@
     },
     "premium": {
       "engine": "webllm",
-      "url": "https://huggingface.co/mlc-ai/gemma-3-270m-it-q4f16_1-MLC/resolve/main/",
-      "hfModelId": "mlc-ai/gemma-3-270m-it-q4f16_1-MLC",
+      "url": "https://huggingface.co/mlc-ai/gemma-3-1b-it-q4f16_1-MLC/resolve/main/",
+      "hfModelId": "mlc-ai/gemma-3-1b-it-q4f16_1-MLC",
       "files": [
         "mlc-chat-config.json",
         "tokenizer.json",
         "params_shard_0.bin",
         "params_shard_1.bin",
         "params_shard_2.bin",
-        "params_shard_3.bin"
+        "params_shard_3.bin",
+        "params_shard_4.bin",
+        "params_shard_5.bin"
       ],
       "mirrors": [
         "https://cdn.jsdelivr.net/gh/localizer-ai/models@v1/premium/"
       ],
-      "sizeMB": 270
+      "sizeMB": 550
     }
   },
   "nlp": {

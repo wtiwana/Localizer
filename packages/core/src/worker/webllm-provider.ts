@@ -24,14 +24,15 @@ export class WebLLMProvider {
 
     onProgress?.({ tier: 'standard', percent: 0, status: 'Loading WebLLM engine' });
 
-    const appConfig: import('@mlc-ai/web-llm').AppConfig = {
+    const appConfig = {
       model_list: [
         {
           model: source.baseUrl.replace(/\/$/, ''),
           model_id: modelId,
+          model_lib: '',
         },
       ],
-    };
+    } as import('@mlc-ai/web-llm').AppConfig;
 
     this.engine = await webllm.CreateMLCEngine(modelId, {
       appConfig,

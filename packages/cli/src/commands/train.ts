@@ -1,10 +1,7 @@
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import path from 'node:path';
-
-interface QAItem {
-  question: string;
-  answer: string;
-}
+import { scanBundleDir } from '../utils/bundle-scan.js';
+import { synthesizeQaFromPages, type QAItem } from '../utils/page-qa.js';
 
 interface TrainOptions {
   data?: string;
@@ -35,12 +32,13 @@ export async function trainModel(options: TrainOptions): Promise<void> {
 
   await writeFile(path.join(options.output, 'training-data.json'), JSON.stringify(trainingFile, null, 2));
 
+  const scanned = await scanBundleDir(options.output);
   const manifest = {
     version: '1',
     id: path.basename(options.output),
-    engine: 'transformers',
-    files: ['model.onnx', 'tokenizer.json', 'config.json', 'training-data.json'],
-    sizeMB: 78,
+    engine: 'transformers' as const,
+    files: [...new Set([...scanned.files, 'model.onnx', 'tokenizer.json', 'config.json', 'training-data.json'])],
+    sizeMB: scanned.hasRuntimeWeights ? scanned.sizeMB : 78,
     baseModel: options.base,
     trainingPairs: qaPairs.length,
   };
@@ -52,7 +50,7 @@ export async function trainModel(options: TrainOptions): Promise<void> {
   console.log('Next steps:');
   console.log('  1. Fine-tune the base model with LoRA using training-data.json');
   console.log('  2. Export ONNX weights to this directory');
-  console.log('  3. Run: localizer validate ./public/models/assistant');
+  console.log('  3. Run: localizer validate ./public/models/assistant --strict');
 }
 
 async function collectTrainingData(options: TrainOptions): Promise<QAItem[]> {
@@ -66,23 +64,8 @@ async function collectTrainingData(options: TrainOptions): Promise<QAItem[]> {
 
   if (options.pages && options.autoQa) {
     const count = Number(options.qaCount ?? '100');
-    pairs.push(...synthesizeQaFromPages(options.pages, count));
+    pairs.push(...await synthesizeQaFromPages(options.pages, count));
   }
 
   return pairs;
-}
-
-function synthesizeQaFromPages(pagesGlob: string, count: number): QAItem[] {
-  const samples = [
-    {
-      question: `What is covered in ${pagesGlob}?`,
-      answer: 'This documentation covers the main features and setup steps for the product.',
-    },
-    {
-      question: 'How do I get started?',
-      answer: 'Install the package, initialize Localizer at page load, and enable the features you need.',
-    },
-  ];
-
-  return samples.slice(0, Math.min(count, samples.length));
 }

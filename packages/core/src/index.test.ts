@@ -16,6 +16,12 @@ describe('registry', () => {
     expect(PRESET_FEATURES.basic).toContain('chat');
     expect(UPGRADE_THRESHOLDS.standard).toBe(40);
   });
+
+  it('uses a larger model for premium tier', async () => {
+    const { MODEL_TIERS } = await import('../src/registry');
+    expect(MODEL_TIERS.premium.model).toContain('1b');
+    expect(MODEL_TIERS.premium.sizeMB).toBeGreaterThan(MODEL_TIERS.standard.sizeMB);
+  });
 });
 
 describe('ModelTierManager', () => {
@@ -30,6 +36,18 @@ describe('ModelTierManager', () => {
     });
     expect(manager.shouldPrefetchStandard()).toBe(true);
     expect(manager.shouldPrefetchPremium()).toBe(false);
+  });
+
+  it('prefetches premium tier when score qualifies', () => {
+    const manager = new ModelTierManager('auto', {
+      score: 85,
+      tier: 'premium',
+      webgpu: true,
+      deviceMemoryGB: 8,
+      connection: 'fast',
+      saveData: false,
+    });
+    expect(manager.shouldPrefetchPremium()).toBe(true);
   });
 
   it('hot-swaps to standard when ready', () => {

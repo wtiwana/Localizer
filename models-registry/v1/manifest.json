@@ -19,9 +19,9 @@
     "premium": {
       "engine": "webllm",
       "url": "https://cdn.jsdelivr.net/gh/localizer-ai/models@v1/premium/",
-      "hfModelId": "mlc-ai/gemma-3-270m-it-q4f16_1-MLC",
+      "hfModelId": "mlc-ai/gemma-3-1b-it-q4f16_1-MLC",
       "files": ["mlc-chat-config.json", "tokenizer.json", "params_shard_0.bin"],
-      "sizeMB": 270
+      "sizeMB": 550
     }
   },
   "nlp": {

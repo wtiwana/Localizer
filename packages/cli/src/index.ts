@@ -44,8 +44,12 @@ program
   .command('validate')
   .description('Validate a model bundle directory')
   .argument('<dir>', 'Model bundle directory')
-  .action(async (dir: string) => {
-    await validateBundle(dir);
+  .option('--strict', 'Fail when runtime weights (.onnx or .bin) are missing', false)
+  .action(async (dir: string, options: { strict?: boolean }) => {
+    const result = await validateBundle(dir, { strict: options.strict });
+    if (!result.valid) {
+      process.exit(1);
+    }
   });
 
 program

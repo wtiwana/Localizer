@@ -28,6 +28,31 @@
           <span id="status-text">Initializing model…</span>
         </div>
         <div id="tier-badge" class="badge hidden" role="status"></div>
+
+        <section id="capability-panel" class="capability-panel hidden" aria-labelledby="capability-heading">
+          <h2 id="capability-heading" class="sr-only">Device capability</h2>
+          <div class="capability-grid">
+            <div class="capability-item">
+              <span class="capability-label">Score</span>
+              <span id="capability-score" class="capability-value">—</span>
+            </div>
+            <div class="capability-item">
+              <span class="capability-label">Backend</span>
+              <span id="capability-backend" class="capability-value">—</span>
+            </div>
+            <div class="capability-item">
+              <span class="capability-label">Memory</span>
+              <span id="capability-memory" class="capability-value">—</span>
+            </div>
+            <div class="capability-item">
+              <span class="capability-label">Cache</span>
+              <span id="cache-status" class="capability-value">IndexedDB</span>
+            </div>
+          </div>
+          <div id="progress-bar" class="progress-bar hidden" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+        </section>
       </header>
 
       <main class="content">
@@ -80,18 +105,44 @@ for await (const chunk of ai.chat.stream('Hello!')) {
           </section>
 
           <section class="card nlp-card" aria-labelledby="nlp-heading">
-            <h2 id="nlp-heading">Bonus: one-click NLP</h2>
+            <h2 id="nlp-heading">NLP playground</h2>
             <p class="nlp-desc">Declarative actions need no JavaScript — just HTML attributes.</p>
             <textarea id="article" rows="4">Localizer brings local AI to the browser. Developers add one npm package or script tag, and models run on the visitor's device with no API bills.</textarea>
-            <button
-              id="summarize-btn"
-              data-localizer-action="summarize"
-              data-target="#article"
-              data-output="#summary-output"
-            >
-              Summarize
-            </button>
-            <p id="summary-output" class="output" aria-live="polite"></p>
+            <div class="nlp-actions">
+              <button
+                id="summarize-btn"
+                data-localizer-action="summarize"
+                data-target="#article"
+                data-output="#nlp-output"
+              >
+                Summarize
+              </button>
+              <button
+                id="classify-btn"
+                data-localizer-action="classify"
+                data-target="#article"
+                data-output="#nlp-output"
+              >
+                Classify
+              </button>
+              <button
+                id="rewrite-btn"
+                data-localizer-action="rewrite"
+                data-target="#article"
+                data-output="#nlp-output"
+                data-tone="concise"
+              >
+                Rewrite
+              </button>
+            </div>
+            <p id="nlp-output" class="output" aria-live="polite"></p>
+          </section>
+
+          <section class="card widget-card" aria-labelledby="widget-heading">
+            <h2 id="widget-heading">Widget preview</h2>
+            <p class="nlp-desc">Drop-in chat widget with theme and accent color support.</p>
+            <button id="widget-toggle" type="button">Toggle widget preview</button>
+            <p class="hint">Uses <code>createWidget()</code> from <code>localizer/widget</code>.</p>
           </section>
         </aside>
       </main>

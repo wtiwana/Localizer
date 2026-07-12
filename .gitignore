@@ -5,6 +5,8 @@ dist/
 .env
 .env.*
 coverage/
+test-results/
+playwright-report/
 .turbo/
 *.log
 apps/demo/public/localizer-models/
