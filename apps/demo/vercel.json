@@ -1,7 +1,7 @@
 {
-  "buildCommand": "npm run build -w localizer && npm run build -w @localizer/demo",
+  "installCommand": "cd ../.. && npm ci",
+  "buildCommand": "cd ../.. && npm run build -w localizer && npm run build -w @localizer/demo",
   "outputDirectory": "dist",
-  "installCommand": "npm ci",
   "framework": null,
   "headers": [
     {

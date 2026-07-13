@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "vercel-build": "cd ../.. && npm run build -w localizer && npm run build -w @localizer/demo",
     "postbuild": "rm -rf ../../dist && cp -r dist ../../dist",
     "preview": "vite preview",
     "preview:self-hosted": "vite preview --open '?mode=self-hosted'"
