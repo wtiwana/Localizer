@@ -16,7 +16,8 @@
     "prepare:demo-self-hosted": "npm run build -w @localizer/cli && node packages/cli/dist/index.js pull -o apps/demo/public/localizer-models -t micro",
     "prepare:demo-self-hosted:ci": "npm run build -w @localizer/cli && node packages/cli/dist/index.js pull -o apps/demo/public/localizer-models -t micro,nlp --metadata-only",
     "smoke:self-hosted": "node scripts/smoke-self-hosted.mjs",
-    "lint": "npm run lint --workspaces --if-present"
+    "lint": "npm run lint --workspaces --if-present",
+    "vercel-build": "npm run build -w localizer && npm run build -w @localizer/demo"
   },
   "engines": {
     "node": ">=18"
