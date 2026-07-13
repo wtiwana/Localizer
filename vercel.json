@@ -1,6 +1,6 @@
 {
-  "buildCommand": "npm run build -w localizer && npm run build -w @localizer/demo",
-  "outputDirectory": "apps/demo/dist",
+  "buildCommand": "npm run vercel-build",
+  "outputDirectory": "dist",
   "installCommand": "npm ci",
   "framework": null,
   "headers": [

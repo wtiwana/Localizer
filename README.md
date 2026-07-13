@@ -43,11 +43,12 @@ The interactive demo (`apps/demo`) deploys to production on every push to `main`
 ### One-time setup
 
 1. Create a [Vercel](https://vercel.com) project linked to this repository (root directory = repo root; Vercel reads [`vercel.json`](./vercel.json)).
-2. Add these GitHub repository secrets (**Settings → Secrets and variables → Actions**):
+2. Ensure **Output Directory** is `dist` in Vercel project settings (or remove any stale Production Overrides that force a different path).
+3. Add these GitHub repository secrets (**Settings → Secrets and variables → Actions**):
    - `VERCEL_TOKEN` — from [Vercel account tokens](https://vercel.com/account/tokens)
    - `VERCEL_ORG_ID` — from `.vercel/project.json` after linking, or the Vercel project settings
    - `VERCEL_PROJECT_ID` — from `.vercel/project.json` after linking, or the Vercel project settings
-3. Push to `main` — the [deploy-demo workflow](.github/workflows/deploy-demo.yml) builds and deploys automatically.
+4. Push to `main` — the [deploy-demo workflow](.github/workflows/deploy-demo.yml) builds and deploys automatically.
 
 Self-hosted mode is available at `/?mode=self-hosted` once model weights are pulled into `apps/demo/public/localizer-models/` and included in the deploy artifact.
 
