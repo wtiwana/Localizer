@@ -4,9 +4,13 @@ import {
   registerLocalizerBoot,
   computeCapabilityProfile,
   detectBackend,
+  setWorkerUrl,
   type LocalizerOptions,
 } from 'localizer';
 import { createWidget } from 'localizer/widget';
+import workerUrl from '../../packages/core/src/worker/index.ts?worker&url';
+
+setWorkerUrl(workerUrl);
 
 const SELF_HOSTED_BASE_URL = '/localizer-models/';
 const CHAT_SYSTEM = 'You are Localizer, a helpful AI assistant that runs locally in the browser. Answer briefly and clearly in 1-3 sentences.';
