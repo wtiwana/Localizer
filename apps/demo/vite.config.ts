@@ -1,4 +1,9 @@
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 import { defineConfig } from 'vite';
+
+const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
+const coreSrc = path.join(repoRoot, 'packages/core/src');
 
 const crossOriginHeaders = {
   'Cross-Origin-Opener-Policy': 'same-origin',
@@ -6,6 +11,13 @@ const crossOriginHeaders = {
 };
 
 export default defineConfig({
+  resolve: {
+    alias: [
+      { find: 'localizer/worker', replacement: path.join(coreSrc, 'worker/index.ts') },
+      { find: 'localizer/widget', replacement: path.join(coreSrc, 'widget/index.ts') },
+      { find: 'localizer', replacement: path.join(coreSrc, 'index.ts') },
+    ],
+  },
   server: {
     port: 5173,
     headers: crossOriginHeaders,
