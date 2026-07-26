@@ -23,7 +23,7 @@
     "node": ">=18"
   },
   "devDependencies": {
-    "@playwright/test": "^1.51.1"
+    "@playwright/test": "^1.62.0"
   },
   "license": "MIT"
 }
