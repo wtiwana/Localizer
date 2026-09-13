@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@huggingface/transformers": "^3.4.0",
-    "@mlc-ai/web-llm": "^0.2.79",
+    "@mlc-ai/web-llm": "^0.2.85",
     "idb-keyval": "^6.2.1"
   },
   "devDependencies": {
